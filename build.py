@@ -60,6 +60,8 @@ def build_site(ref_area_id, ref_area_name):
         docs_subfolder='data-docs',
     )
 
+    os.system('cd ' + site_folder + ' && bundle exec jekyll build')
+
 
 def get_ref_area_codes():
     dsd = get_dsd()
@@ -70,6 +72,11 @@ def get_ref_area_codes():
     return numeric_codes
 
 
+os.system('bundle install')
+max_sites = 2
+num_sites = 0
 for code in get_ref_area_codes():
     build_site(code.id, str(code.name))
-    break
+    num_sites += 1
+    if num_sites == max_sites:
+        break

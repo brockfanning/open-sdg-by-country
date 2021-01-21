@@ -1,4 +1,4 @@
-remote_theme: open-sdg/open-sdg@1.3.0-dev
+remote_theme: brockfanning/open-sdg@open-sdg-by-country-features
 environment: production
 languages:
   - en
