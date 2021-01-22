@@ -32,8 +32,8 @@ def get_site_config(ref_area_id, ref_area_name):
         'adjective': ref_area_name
     }
     config['disclaimer'] = {
-        'phase': 'DEMO',
-        'message': 'This is a demo of <a href="https://open-sdg.org">Open SDG</a> using data from the <a href="https://unstats.un.org/sdgs/indicators/database/">SDG Global Database</a> for <strong>' + ref_area_name + '</strong>.'
+        'phase': 'UNOFFICIAL',
+        'message': 'This is an <em>unofficial demo</em> of <a href="https://open-sdg.org">Open SDG</a> using data from the <a href="https://unstats.un.org/sdgs/indicators/database/">SDG Global Database</a> for <strong>' + ref_area_name + '</strong>.'
     }
     return config
 
@@ -98,17 +98,19 @@ def get_ref_area_codes():
 
 
 os.system('bundle install')
-max_sites = 2
-num_sites = 0
+countdown = 10
 ref_area_json = []
 for code in get_ref_area_codes():
     area_id = code.id
     area_name = str(code.name)
-    build_site(area_id, area_name)
-    ref_area_json.append({ 'name': area_name, 'path': area_id + '/' })
+    try:
+        build_site(area_id, area_name)
+        ref_area_json.append({ 'name': area_name, 'path': area_id + '/' })
+    except:
+        print('Build for ' + area_name + ' (' + area_id + ') failed. Skipping.')
 
-    num_sites += 1
-    if num_sites == max_sites:
+    countdown -= 1
+    if countdown == 0:
         break
 
 with open(os.path.join('homepage', 'reference-areas.json'), 'w') as stream:
