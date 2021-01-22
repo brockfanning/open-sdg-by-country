@@ -8,6 +8,9 @@ from urllib.request import urlretrieve
 from pathlib import Path
 
 
+# To test only a few builds, set this to a lower number
+countdown = 10000
+
 def get_dsd_url():
     return 'https://registry.sdmx.org/ws/public/sdmxapi/rest/datastructure/IAEG-SDGs/SDG/latest/?format=sdmx-2.1&detail=full&references=children'
 
@@ -108,7 +111,6 @@ def get_ref_area_codes():
 
 
 os.system('bundle install')
-countdown = 2
 ref_area_json = []
 failures = []
 for code in get_ref_area_codes():
