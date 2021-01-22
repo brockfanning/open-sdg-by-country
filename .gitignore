@@ -2,3 +2,4 @@ _builds
 venv
 SDG_DSD.xml
 Gemfile.lock
+.vscode
