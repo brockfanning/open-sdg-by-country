@@ -97,8 +97,8 @@ def build_site(ref_area_id, ref_area_name):
     os.system('cd ' + temp_folder + ' && bundle exec jekyll build')
     built_site_source = os.path.join(temp_folder, ref_area_id)
     built_site_destination = os.path.join(site_folder, ref_area_id)
-    shutil.rmtree(built_site_destination)
-    shutil.move(built_site_source, built_site_destination)
+    shutil.rmtree(built_site_destination, ignore_errors=True)
+    shutil.move(built_site_source, site_folder)
 
 
 def get_ref_area_codes():
