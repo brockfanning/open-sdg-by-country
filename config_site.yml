@@ -7,7 +7,7 @@ metadata_edit_url: http://prose.io/#my-org/my-repo/edit/develop/meta/[id].md
 create_indicators:
   layout: indicator
 create_goals:
-  layout: goal-by-target
+  layout: goal-by-target-vertical
 create_pages: true
 email_contacts:
   questions: test@example.com
