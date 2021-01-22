@@ -3,10 +3,9 @@ import sdg
 import os
 import yaml
 import json
+import shutil
 from urllib.request import urlretrieve
 from pathlib import Path
-from shutil import copyfile
-from shutil import move
 
 
 def get_dsd_url():
@@ -54,6 +53,10 @@ def build_site(ref_area_id, ref_area_name):
 
     def alter_meta(meta):
         meta['national_geographical_coverage'] = ref_area_name
+        meta['source_active_1'] = True
+        meta['source_organisation_1'] = 'United Nations Statistics Division'
+        meta['source_url_1'] = 'https://unstats.un.org/sdgs/indicators/database/'
+        meta['source_url_text_1'] = 'SDG Global Database'
         return meta
 
     drop_dimensions = [
@@ -89,8 +92,10 @@ def build_site(ref_area_id, ref_area_name):
     )
 
     os.system('cd ' + temp_folder + ' && bundle exec jekyll build')
-    built_site = os.path.join(temp_folder, ref_area_id)
-    move(built_site, site_folder)
+    built_site_source = os.path.join(temp_folder, ref_area_id)
+    built_site_destination = os.path.join(site_folder, ref_area_id)
+    shutil.rmtree(built_site_destination)
+    shutil.move(built_site_source, built_site_destination)
 
 
 def get_ref_area_codes():
@@ -105,6 +110,7 @@ def get_ref_area_codes():
 os.system('bundle install')
 countdown = 2
 ref_area_json = []
+failures = []
 for code in get_ref_area_codes():
     area_id = code.id
     area_name = str(code.name)
@@ -112,7 +118,8 @@ for code in get_ref_area_codes():
         build_site(area_id, area_name)
         ref_area_json.append({ 'name': area_name, 'id': area_id })
     except:
-        print('Build for ' + area_name + ' (' + area_id + ') failed. Skipping.')
+        failure = 'Build for ' + area_name + ' (' + area_id + ') failed. Skipping.'
+        failures.append(failure)
 
     countdown -= 1
     if countdown == 0:
@@ -122,4 +129,11 @@ with open(os.path.join('homepage', 'reference-areas.json'), 'w') as stream:
     json.dump(ref_area_json, stream)
 
 for page in ['homepage.css', 'homepage.js', 'index.html', 'reference-areas.json']:
-    copyfile(os.path.join('homepage', page), os.path.join('_builds', 'site', page))
+    shutil.copyfile(os.path.join('homepage', page), os.path.join('_builds', 'site', page))
+
+if len(failures) > 0:
+    print('*************************************************')
+    print('* WARNING: Some builds failed and were skipped: *')
+    print('*************************************************')
+    for failure in failures:
+        print('* ' + failure)

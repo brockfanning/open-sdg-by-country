@@ -56,3 +56,11 @@ series_toggle: true
 data_fields:
   units: UNIT_MEASURE
   series: SERIES
+metadata_tabs:
+  - scope: global
+    title: indicator.global_metadata
+    description: indicator.global_metadata_blurb
+  - scope: sources
+    title: indicator.sources
+    description: ''
+hide_empty_metadata: true
