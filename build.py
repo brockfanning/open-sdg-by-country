@@ -6,6 +6,7 @@ import json
 from urllib.request import urlretrieve
 from pathlib import Path
 from shutil import copyfile
+from shutil import move
 
 
 def get_dsd_url():
@@ -42,11 +43,13 @@ def build_site(ref_area_id, ref_area_name):
 
     site_folder = os.path.join('_builds', 'site')
     data_folder = os.path.join('_builds', 'data', ref_area_id)
+    temp_folder = os.path.join('_builds', 'temp')
     Path(site_folder).mkdir(parents=True, exist_ok=True)
     Path(data_folder).mkdir(parents=True, exist_ok=True)
+    Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
     site_config = get_site_config(ref_area_id, ref_area_name)
-    with open(os.path.join(site_folder, '_config.yml'), 'w') as stream:
+    with open(os.path.join(temp_folder, '_config.yml'), 'w') as stream:
         yaml.dump(site_config, stream)
 
     def alter_meta(meta):
@@ -85,7 +88,9 @@ def build_site(ref_area_id, ref_area_name):
         docs_subfolder='data-docs',
     )
 
-    os.system('cd ' + site_folder + ' && bundle exec jekyll build')
+    os.system('cd ' + temp_folder + ' && bundle exec jekyll build')
+    built_site = os.path.join(temp_folder, ref_area_id)
+    move(built_site, site_folder)
 
 
 def get_ref_area_codes():
@@ -98,14 +103,14 @@ def get_ref_area_codes():
 
 
 os.system('bundle install')
-countdown = 10
+countdown = 2
 ref_area_json = []
 for code in get_ref_area_codes():
     area_id = code.id
     area_name = str(code.name)
     try:
         build_site(area_id, area_name)
-        ref_area_json.append({ 'name': area_name, 'path': area_id + '/' })
+        ref_area_json.append({ 'name': area_name, 'id': area_id })
     except:
         print('Build for ' + area_name + ' (' + area_id + ') failed. Skipping.')
 

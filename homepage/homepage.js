@@ -1,24 +1,16 @@
-var areas = new Bloodhound({
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    prefetch: {
-        url: 'reference-areas.json',
-        cache: false,
-    },
-});
+$(document).ready(function() {
 
-$('#bloodhound .typeahead').typeahead(
-    {
-        hint: true,
-        highlight: true,
-        minLength: 1
-    },
-    {
-        name: 'areas',
-        display: 'name',
-        source: areas
+    $.getJSON('reference-areas.json', function(data) {
+        $.each(data, function(key, val) {
+            $('.ref-area-select').append("<option value=" + val.id + ">" + val.name + "</li>");
+        });
+        $('.ref-area-select').select2({
+            width: '75%',
+        });
     });
 
-$('.typeahead').bind('typeahead:select', function (ev, suggestion) {
-    location.href = suggestion.path;
+    $('#view-button').click(function() {
+        var selectedId = $('.ref-area-select').val();
+        location.href = selectedId + '/';
+    })
 });
