@@ -2,12 +2,15 @@ import sdmx
 import sdg
 import os
 import yaml
+import json
 from urllib.request import urlretrieve
 from pathlib import Path
+from shutil import copyfile
 
 
 def get_dsd_url():
     return 'https://registry.sdmx.org/ws/public/sdmxapi/rest/datastructure/IAEG-SDGs/SDG/latest/?format=sdmx-2.1&detail=full&references=children'
+
 
 def get_dsd():
     dsd_url = get_dsd_url()
@@ -27,6 +30,10 @@ def get_site_config(ref_area_id, ref_area_name):
     config['country'] = {
         'name': ref_area_name,
         'adjective': ref_area_name
+    }
+    config['disclaimer'] = {
+        'phase': 'DEMO',
+        'message': 'This is a demo of <a href="https://open-sdg.org">Open SDG</a> using data from the <a href="https://unstats.un.org/sdgs/indicators/database/">SDG Global Database</a> for <strong>' + ref_area_name + '</strong>.'
     }
     return config
 
@@ -93,8 +100,19 @@ def get_ref_area_codes():
 os.system('bundle install')
 max_sites = 2
 num_sites = 0
+ref_area_json = []
 for code in get_ref_area_codes():
-    build_site(code.id, str(code.name))
+    area_id = code.id
+    area_name = str(code.name)
+    build_site(area_id, area_name)
+    ref_area_json.append({ 'name': area_name, 'path': area_id + '/' })
+
     num_sites += 1
     if num_sites == max_sites:
         break
+
+with open(os.path.join('homepage', 'reference-areas.json'), 'w') as stream:
+    json.dump(ref_area_json, stream)
+
+for page in ['homepage.css', 'homepage.js', 'index.html', 'reference-areas.json']:
+    copyfile(os.path.join('homepage', page), os.path.join('_builds', 'site', page))
