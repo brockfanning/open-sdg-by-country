@@ -1,0 +1,34 @@
+schema_file: _prose.yml
+languages:
+  - en
+translations:
+  - class: TranslationInputYaml
+    source: translations
+  - class: TranslationInputSdmx
+    source: SDG_DSD.xml
+inputs:
+  - class: InputSdmxMl_UnitedNationsApi
+    dsd: SDG_DSD.xml
+    import_codes: true
+    drop_singleton_dimensions: false
+    drop_dimensions:
+      - UPPER_BOUND
+      - LOWER_BOUND
+      - UNIT_MULT
+      - COMMENT_OBS
+      - SOURCE_DETAIL
+      - BASE_PER
+      - NATURE
+      - DATA_LAST_UPDATE
+      - FREQ
+      - REPORTING_TYPE
+      - REF_AREA
+      - TIME_DETAIL
+      - OBS_STATUS
+docs_subfolder: data-docs
+docs_branding: Example data
+docs_intro: All data described here was downloaded from the
+  <a href="https://unstats.un.org/sdgs/indicators/database/">SDG Global Database</a>
+  and then processed by the <a href="https://github.com/open-sdg/sdg-build">SDG Build</a>
+  library. This collection of data is <strong>unofficial</strong> and used only to
+  demonstrate the Open SDG platform.

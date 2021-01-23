@@ -4,21 +4,33 @@ import os
 import yaml
 import json
 import shutil
+import datetime
+from git import Repo
 from urllib.request import urlretrieve
 from pathlib import Path
 
 
 # To test only a few builds, set this to a lower number
-countdown = 10000
+countdown = 1000
 
-def get_dsd_url():
-    return 'https://registry.sdmx.org/ws/public/sdmxapi/rest/datastructure/IAEG-SDGs/SDG/latest/?format=sdmx-2.1&detail=full&references=children'
+
+def download_dsd():
+    dsd_url = 'https://registry.sdmx.org/ws/public/sdmxapi/rest/datastructure/IAEG-SDGs/SDG/latest/?format=sdmx-2.1&detail=full&references=children'
+    dsd_file = 'SDG_DSD.xml'
+    urlretrieve(dsd_url, dsd_file)
+
+
+def download_translations():
+    shutil.rmtree('translations', ignore_errors=True)
+    shutil.rmtree('sdg-translations', ignore_errors=True)
+    Repo.clone_from('https://github.com/open-sdg/sdg-translations.git', 'sdg-translations')
+    os.makedirs('translations', exist_ok=True)
+    shutil.move(os.path.join('sdg-translations', 'translations', 'en'), 'translations')
+    shutil.rmtree('sdg-translations', ignore_errors=True)
 
 
 def get_dsd():
-    dsd_url = get_dsd_url()
     dsd_file = 'SDG_DSD.xml'
-    urlretrieve(dsd_url, dsd_file)
     msg = sdmx.read_sdmx(dsd_file)
     return msg.structure[0]
 
@@ -41,6 +53,27 @@ def get_site_config(ref_area_id, ref_area_name):
     return config
 
 
+def get_data_config(ref_area_id, ref_area_name, data_folder):
+    with open('config_data.yml', 'r') as stream:
+        config = yaml.load(stream, Loader=yaml.FullLoader)
+
+    def alter_meta(meta):
+        meta['national_geographical_coverage'] = ref_area_name
+        meta['source_active_1'] = True
+        meta['source_organisation_1'] = 'United Nations Statistics Division'
+        meta['source_url_1'] = 'https://unstats.un.org/sdgs/indicators/database/'
+        meta['source_url_text_1'] = 'SDG Global Database'
+        return meta
+
+    config['alter_meta'] = alter_meta
+    config['site_dir'] = data_folder
+    config['inputs'][0]['reference_area'] = ref_area_id
+    config['docs_branding'] += ' for ' + ref_area_name
+    config['docs_intro'] += ' This data covers {} and was downloaded {}.'.format(
+        ref_area_name, datetime.datetime.now().strftime('%Y-%m-%d'))
+    return config
+
+
 def build_site(ref_area_id, ref_area_name):
 
     site_folder = os.path.join('_builds', 'site')
@@ -54,45 +87,8 @@ def build_site(ref_area_id, ref_area_name):
     with open(os.path.join(temp_folder, '_config.yml'), 'w') as stream:
         yaml.dump(site_config, stream)
 
-    def alter_meta(meta):
-        meta['national_geographical_coverage'] = ref_area_name
-        meta['source_active_1'] = True
-        meta['source_organisation_1'] = 'United Nations Statistics Division'
-        meta['source_url_1'] = 'https://unstats.un.org/sdgs/indicators/database/'
-        meta['source_url_text_1'] = 'SDG Global Database'
-        return meta
-
-    drop_dimensions = [
-        'UPPER_BOUND',
-        'LOWER_BOUND',
-        'UNIT_MULT',
-        'COMMENT_OBS',
-        'SOURCE_DETAIL',
-        'BASE_PER',
-        'NATURE',
-        'DATA_LAST_UPDATE',
-        'TIME_DETAIL',
-    ]
-    sdg.open_sdg_build(
-        site_dir=data_folder,
-        schema_file='_prose.yml',
-        languages=['en'],
-        translations=[
-            {'class': 'TranslationInputSdgTranslations'},
-            {'class': 'TranslationInputSdmx', 'source': get_dsd_url()},
-        ],
-        inputs=[
-            {
-                'class': 'InputSdmxMl_UnitedNationsApi',
-                'reference_area': ref_area_id,
-                'import_codes': True,
-                'drop_singleton_dimensions': True,
-                'drop_dimensions': drop_dimensions,
-            },
-        ],
-        alter_meta=alter_meta,
-        docs_subfolder='data-docs',
-    )
+    data_config = get_data_config(ref_area_id, ref_area_name, data_folder)
+    sdg.open_sdg_build(**data_config)
 
     os.system('cd ' + temp_folder + ' && bundle exec jekyll build')
     built_site_source = os.path.join(temp_folder, ref_area_id)
@@ -110,7 +106,9 @@ def get_ref_area_codes():
     return numeric_codes
 
 
-os.system('bundle install')
+download_dsd()
+download_translations()
+
 ref_area_json = []
 failures = []
 for code in get_ref_area_codes():

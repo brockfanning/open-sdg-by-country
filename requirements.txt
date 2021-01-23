@@ -1,3 +1,4 @@
 sdmx1
+gitpython
 git+git://github.com/dougmet/yamlmd
 git+git://github.com/brockfanning/sdg-build-1@open-sdg-by-country-features
